@@ -20,6 +20,8 @@ const Section: React.FC<SectionProps> = ({
   const sectionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (!sectionRef.current) return;
+    
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -28,14 +30,14 @@ const Section: React.FC<SectionProps> = ({
           }
         });
       },
-      { threshold: 0.1 }
+      { threshold: 0.1, root: null }
     );
 
-    const elements = sectionRef.current?.querySelectorAll('.animate-on-scroll');
-    elements?.forEach((el) => observer.observe(el));
+    const elements = sectionRef.current.querySelectorAll('.animate-on-scroll');
+    elements.forEach((el) => observer.observe(el));
 
     return () => {
-      elements?.forEach((el) => observer.unobserve(el));
+      elements.forEach((el) => observer.unobserve(el));
     };
   }, []);
 
@@ -44,13 +46,13 @@ const Section: React.FC<SectionProps> = ({
       id={id} 
       ref={sectionRef}
       className={cn(
-        'section',
+        'section flex-shrink-0 h-screen flex flex-col justify-center relative w-screen',
         bgColor,
         className
       )}
     >
       <div className={cn(
-        'section-content',
+        'section-content px-8 md:px-16 lg:px-24 max-w-7xl mx-auto w-full relative z-10',
         fullWidth ? 'max-w-none px-0' : ''
       )}>
         {children}

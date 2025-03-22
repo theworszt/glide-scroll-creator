@@ -2,6 +2,7 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ChevronRight } from 'lucide-react';
+import NavBar from './NavBar';
 
 interface HorizontalScrollProps {
   children: React.ReactNode;
@@ -15,6 +16,7 @@ const HorizontalScroll: React.FC<HorizontalScrollProps> = ({ children }) => {
   const [sections, setSections] = useState<string[]>([]);
   const [currentSection, setCurrentSection] = useState('');
   const [showScrollIndicator, setShowScrollIndicator] = useState(true);
+  const [isInitialized, setIsInitialized] = useState(false);
   const isMobile = useIsMobile();
 
   // Calculate total scroll width
@@ -34,12 +36,26 @@ const HorizontalScroll: React.FC<HorizontalScrollProps> = ({ children }) => {
         if (id) sectionIds.push(id);
       });
       setSections(sectionIds);
+      
+      if (!isInitialized && sectionIds.length > 0) {
+        setCurrentSection(sectionIds[0]);
+        setIsInitialized(true);
+      }
     };
 
     calculateScroll();
+    
+    // Small delay to ensure DOM is fully rendered
+    const timer = setTimeout(() => {
+      calculateScroll();
+    }, 100);
+
     window.addEventListener('resize', calculateScroll);
-    return () => window.removeEventListener('resize', calculateScroll);
-  }, []);
+    return () => {
+      window.removeEventListener('resize', calculateScroll);
+      clearTimeout(timer);
+    };
+  }, [isInitialized]);
 
   // Auto-hide scroll indicator after 5 seconds of inactivity
   useEffect(() => {
@@ -68,29 +84,31 @@ const HorizontalScroll: React.FC<HorizontalScrollProps> = ({ children }) => {
   // Handle mouse wheel horizontal scrolling
   useEffect(() => {
     const container = containerRef.current;
-    if (!container) return;
+    if (!container || isMobile) return;
 
     const handleWheel = (e: WheelEvent) => {
-      if (isMobile) return;
       e.preventDefault();
       
       const delta = e.deltaY;
       const newPosition = scrollPosition + delta;
       const boundedPosition = Math.max(0, Math.min(newPosition, maxScroll));
       
+      setScrollPosition(boundedPosition);
       window.scrollTo({
         left: boundedPosition,
         behavior: 'smooth'
       });
     };
 
-    container.addEventListener('wheel', handleWheel);
+    container.addEventListener('wheel', handleWheel, { passive: false });
     return () => container.removeEventListener('wheel', handleWheel);
   }, [scrollPosition, maxScroll, isMobile]);
 
   // Sync scroll position to window scroll
   useEffect(() => {
     const handleScroll = () => {
+      if (isMobile) return;
+      
       setScrollPosition(window.scrollX);
       
       // Find current section
@@ -111,7 +129,7 @@ const HorizontalScroll: React.FC<HorizontalScrollProps> = ({ children }) => {
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [isMobile]);
 
   // Scroll to a specific section
   const scrollToSection = useCallback((sectionId: string) => {
@@ -121,25 +139,28 @@ const HorizontalScroll: React.FC<HorizontalScrollProps> = ({ children }) => {
     section.scrollIntoView({ behavior: 'smooth', inline: 'start' });
   }, []);
 
+  if (isMobile) {
+    return <>{children}</>;
+  }
+
   return (
-    <div className="scroll-container" ref={containerRef}>
+    <div className="scroll-container fixed inset-0 overflow-hidden" ref={containerRef}>
       <div 
-        className="horizontal-scroll" 
+        className="horizontal-scroll flex h-screen w-auto" 
         ref={scrollRef}
         style={{
-          // Use transform instead of scrollLeft for better performance
-          transform: isMobile ? 'none' : `translateX(-${scrollPosition}px)`,
+          transform: `translateX(-${scrollPosition}px)`,
+          transition: 'transform 0.1s ease-out',
+          willChange: 'transform',
         }}
       >
         {children}
       </div>
       
-      {!isMobile && (
-        <div className={`scroll-indicator ${showScrollIndicator ? 'opacity-100' : 'opacity-0'}`}>
-          <span className="text-xs">Scroll</span>
-          <ChevronRight className="w-4 h-4 animate-scroll-indicator" />
-        </div>
-      )}
+      <div className={`scroll-indicator fixed z-50 bottom-8 right-8 flex items-center gap-2 p-2 rounded-full bg-black/10 backdrop-blur-lg text-black/80 dark:bg-white/10 dark:text-white/80 transition-opacity duration-600 ${showScrollIndicator ? 'opacity-100' : 'opacity-0'}`}>
+        <span className="text-xs">Scroll</span>
+        <ChevronRight className="w-4 h-4 animate-scroll-indicator" />
+      </div>
       
       <NavBar 
         sections={sections.map(id => ({ id, label: id.charAt(0).toUpperCase() + id.slice(1) }))}
@@ -150,5 +171,4 @@ const HorizontalScroll: React.FC<HorizontalScrollProps> = ({ children }) => {
   );
 };
 
-import NavBar from './NavBar';
 export default HorizontalScroll;
