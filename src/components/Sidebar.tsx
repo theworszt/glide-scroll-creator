@@ -16,10 +16,11 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ currentPath }) => {
   const navItems = [
-    { label: 'Projekty', to: '/projects' },
-    { label: 'Usługi', to: '/services' },
-    { label: 'O nas', to: '/about' },
-    { label: 'Kontakt', to: '/contact' }
+    { label: 'Home', to: '/' },
+    { label: 'Projects', to: '/projects' },
+    { label: 'Services', to: '/services' },
+    { label: 'About Us', to: '/about' },
+    { label: 'Contact', to: '/contact' }
   ];
 
   return (
@@ -64,7 +65,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPath }) => {
                     to="/contact"
                     className="inline-block mt-8 px-6 py-3 border border-black/20 rounded-lg hover:bg-black/5 transition-colors"
                   >
-                    Kontakt
+                    Contact Us
                   </Link>
                 </SheetClose>
               </li>

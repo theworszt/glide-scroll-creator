@@ -33,8 +33,8 @@ const NavBar: React.FC<NavBarProps> = ({ sections = [], currentSection = '', onN
       scrolled ? 'bg-background/80 backdrop-blur-md border-b' : 'bg-transparent'
     )}>
       <div className="max-w-7xl mx-auto flex justify-between items-center">
-        <Link to="/" className="text-4xl font-bold text-blue-500 z-50">
-          RDV
+        <Link to="/" className="text-xl font-medium z-50">
+          Bertani
         </Link>
         
         <Sidebar currentPath={currentPath} />
